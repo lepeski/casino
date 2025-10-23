@@ -1,0 +1,16 @@
+{
+  "_comment": "Sample reel animation cycling symbols for ~3 seconds.",
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.slot_reel.spin": {
+      "loop": "once",
+      "animation_length": 3.0,
+      "bones": {
+        "reel": {
+          "rotation": [ 0, 0, 360 ],
+          "easing": "linear"
+        }
+      }
+    }
+  }
+}
