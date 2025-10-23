@@ -1,14 +1,18 @@
 {
-  "_comment": "Sample lever animation. Replace bone names with those from your Blockbench project.",
   "format_version": "1.8.0",
   "animations": {
     "animation.slot_lever.pull": {
       "loop": "once",
       "animation_length": 0.6,
+      "override_previous_animation": true,
       "bones": {
         "lever": {
-          "rotation": [ -30, 0, 0 ],
-          "easing": "easeOut"
+          "rotation": {
+            "0.0": { "vector": [ 0, 0, 0 ], "easing": "easeInOutSine" },
+            "0.08": { "vector": [ -32, 0, 0 ], "easing": "easeOutBack" },
+            "0.28": { "vector": [ -32, 0, 0 ], "easing": "linear" },
+            "0.6": { "vector": [ 0, 0, 0 ], "easing": "easeInOutSine" }
+          }
         }
       }
     }

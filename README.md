@@ -10,15 +10,15 @@ EgyptianCasino is a Paper plugin that extends the AmethystControl economy with E
 
 ## Installation
 
-1. Build the plugin with Maven:
+1. Build the plugin with Gradle:
    ```bash
-   mvn package
+   ./gradlew build
    ```
-   The compiled JAR will be placed in `target/EgyptianCasino-<version>.jar`.
+   The wrapper script downloads and caches the Gradle distribution on first run (requires `curl` or `wget`). The compiled plugin will be placed in `build/libs/EgyptianCasino-<version>.jar`.
 2. Copy both `EgyptianCasino-<version>.jar` and your existing `AmethystControl` plugin into the server's `plugins/` folder.
 3. Restart or reload the server.
 
-A SQLite database named `tokens.db` will be generated in the plugin data folder to persist player token balances.
+Player balances are written to `tokens.yml` in the plugin data folder.
 
 ## Configuration
 
@@ -123,8 +123,8 @@ The provided stubs include `_comment` fields marking where to hook up your final
 
 ### 3. Hooking Up Animations
 
-- `animations/slot_lever.animation.json` – Demonstrates a simple 30° lever rotation. Rename the `lever` bone and adjust keyframes to match your Blockbench rig.
-- `animations/slot_reel_spin.animation.json` – Shows a 360° spin over 3 seconds. Tie this to your reel bone or use texture cycling if you prefer frame-based symbols.
+- `animations/slot_lever.animation.json` – Contains forward/back keyframes for a 0.6 second lever pull (32° swing). Rename the `lever` bone and adjust keyframes to match your Blockbench rig.
+- `animations/slot_reel_spin.animation.json` – Spins a reel bone twice over three seconds. Tie this to your reel bone or use texture cycling if you prefer frame-based symbols.
 
 ### 4. Registering CustomModelData
 
@@ -141,13 +141,13 @@ Ensure your item overrides point to the models above. The gold nugget override i
 
 ## Token Storage
 
-Player balances are tracked in memory and saved asynchronously to `tokens.db`. The token manager guards against concurrent updates so balances remain consistent even when multiple games operate at once.
+Player balances are tracked in memory and saved asynchronously to `tokens.yml`. The token manager guards against concurrent updates so balances remain consistent even when multiple games operate at once.
 
 ## Development Notes
 
 - Game logic lives in `src/main/java/dev/lixqa/egyptiancasino/game/`.
 - Pharaoh Slots runtime code resides in `src/main/java/dev/lixqa/egyptiancasino/slotmachine/`.
-- Token persistence is handled through `TokenManager` and `SqliteTokenStorage` in `src/main/java/dev/lixqa/egyptiancasino/tokens/`.
+- Token persistence is handled through `TokenManager` and `YamlTokenStorage` in `src/main/java/dev/lixqa/egyptiancasino/tokens/`.
 - The Priest of Ra functionality is encapsulated in `PriestOfRaManager` and the `CrystalExchangeListener` under `src/main/java/dev/lixqa/egyptiancasino/exchange/`.
 
 Feel free to add new games by implementing the `CasinoGame` interface and registering the instance in `EgyptianCasinoPlugin#setupGames`.

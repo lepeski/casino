@@ -1,8 +1,5 @@
 package dev.lixqa.egyptiancasino;
 
-import dev.lixqa.amethystControl.AmethystControl;
-import dev.lixqa.amethystControl.MintLedger;
-import dev.lixqa.amethystControl.util.MintedCrystalUtil;
 import dev.lixqa.egyptiancasino.commands.EgyptianCasinoCommand;
 import dev.lixqa.egyptiancasino.exchange.CrystalExchangeListener;
 import dev.lixqa.egyptiancasino.exchange.PriestOfRaManager;
@@ -11,9 +8,10 @@ import dev.lixqa.egyptiancasino.game.CasinoGame;
 import dev.lixqa.egyptiancasino.game.DiceGame;
 import dev.lixqa.egyptiancasino.game.GameRegistry;
 import dev.lixqa.egyptiancasino.game.SlotsGame;
+import dev.lixqa.egyptiancasino.integration.AmethystControlHook;
 import dev.lixqa.egyptiancasino.slotmachine.SlotMachineManager;
 import dev.lixqa.egyptiancasino.tokens.TokenManager;
-import dev.lixqa.egyptiancasino.tokens.storage.SqliteTokenStorage;
+import dev.lixqa.egyptiancasino.tokens.storage.YamlTokenStorage;
 import dev.lixqa.egyptiancasino.tokens.storage.TokenStorage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -36,8 +34,7 @@ import java.util.UUID;
 
 public final class EgyptianCasinoPlugin extends JavaPlugin {
 
-    private AmethystControl amethystControl;
-    private MintLedger mintLedger;
+    private AmethystControlHook amethystHook;
     private NamespacedKey mintedCrystalKey;
     private TokenManager tokenManager;
     private PriestOfRaManager priestManager;
@@ -101,15 +98,18 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
             return false;
         }
 
-        amethystControl = JavaPlugin.getPlugin(AmethystControl.class);
-        mintLedger = amethystControl.getLedger();
-        mintedCrystalKey = amethystControl.getMintedCrystalKey();
-        return amethystControl != null && mintLedger != null && mintedCrystalKey != null;
+        amethystHook = new AmethystControlHook(getLogger());
+        if (!amethystHook.initialize()) {
+            return false;
+        }
+
+        mintedCrystalKey = amethystHook.getMintedCrystalKey();
+        return mintedCrystalKey != null;
     }
 
     private boolean setupTokenManager() {
         try {
-            TokenStorage storage = new SqliteTokenStorage(new File(getDataFolder(), "tokens.db"));
+            TokenStorage storage = new YamlTokenStorage(new File(getDataFolder(), "tokens.yml"));
             tokenManager = new TokenManager(storage);
             tokenManager.initialize();
             return true;
@@ -154,10 +154,6 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
         return casinoConfig;
     }
 
-    public MintLedger getMintLedger() {
-        return mintLedger;
-    }
-
     public NamespacedKey getMintedCrystalKey() {
         return mintedCrystalKey;
     }
@@ -192,13 +188,13 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
                 continue;
             }
 
-            Optional<UUID> ledgerId = MintedCrystalUtil.readLedgerId(stack, mintedCrystalKey);
+            Optional<UUID> ledgerId = amethystHook.readLedgerId(stack);
             if (ledgerId.isEmpty()) {
                 continue;
             }
 
             UUID crystalId = ledgerId.get();
-            boolean redeemed = mintLedger.markRedeemed(crystalId);
+            boolean redeemed = amethystHook.markRedeemed(crystalId);
             if (!redeemed) {
                 continue;
             }
