@@ -1,0 +1,17 @@
+# Build outputs
+/build/
+/.gradle/
+.gradle-wrapper/
+*.iml
+*.ipr
+*.iws
+/.idea/
+
+# Local libraries or binary drops
+*.jar
+*.war
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db
