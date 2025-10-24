@@ -68,6 +68,8 @@ public class SlotMachineInstance {
     public boolean spawn() {
         try {
             World world = baseLocation.getWorld();
+            baseLocation.getBlock().setType(Material.SMOOTH_SANDSTONE);
+            baseLocation.clone().add(0, 1, 0).getBlock().setType(Material.AIR);
             Location bodyLocation = baseLocation.clone().add(0.5, 1.0, 0.5);
             bodyDisplay = world.spawn(bodyLocation, BlockDisplay.class, display -> {
                 display.setBlock(Material.SMOOTH_SANDSTONE.createBlockData());
@@ -102,6 +104,8 @@ public class SlotMachineInstance {
             return true;
         } catch (Exception exception) {
             plugin.getLogger().severe("Unable to spawn Slot Machine: " + exception.getMessage());
+            baseLocation.getBlock().setType(Material.AIR);
+            baseLocation.clone().add(0, 1, 0).getBlock().setType(Material.AIR);
             return false;
         }
     }
@@ -234,5 +238,7 @@ public class SlotMachineInstance {
         if (leverDisplay != null) {
             leverDisplay.remove();
         }
+        baseLocation.getBlock().setType(Material.AIR);
+        baseLocation.clone().add(0, 1, 0).getBlock().setType(Material.AIR);
     }
 }

@@ -52,6 +52,8 @@ After making changes, restart the server (or reload the plugin) to apply them.
 | `/egyptiancasino givetokens [amount]` | Gives gold nugget token items with `CustomModelData:1010` for resource-pack testing (admin only). |
 | `/giveslot [amount]` | Gives the Pharaoh Slot Machine placement item (admin only). |
 
+> **Tip:** Whenever a player checks their balance or places a bet, the plugin automatically moves any Egyptian Token items (gold nuggets with `CustomModelData:1010`) from their inventory into the persistent balance ledger.
+
 ## Spawning the Priest of Ra
 
 Administrators can summon the exchange NPC directly in game:
@@ -78,7 +80,7 @@ The item uses the plugin's `PersistentDataContainer` markers to track ownership.
 
 ### Gameplay Flow
 
-- Right-click the machine (any player) to pull the lever.
+- Right-click the machine's base block or lever (any player) to pull the handle.
 - The machine withdraws **1 Egyptian Token** from the player's balance.
 - A lever animation plays, the reels spin for ~3 seconds, and stop one-by-one.
 - Outcomes are processed through `SlotMachineManager`/`EgyptSlots`:

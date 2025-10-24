@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -129,6 +130,21 @@ public class SlotMachineManager implements Listener, CommandExecutor, TabComplet
         plugin.sendMessage(player, Component.text("Placed a Slot Machine. Only you can break it while sneaking.", NamedTextColor.GOLD));
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void handleMachineInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null) {
+            return;
+        }
+
+        findByBlock(event.getClickedBlock().getLocation()).ifPresent(machine -> {
+            event.setCancelled(true);
+            if (event.getHand() != EquipmentSlot.HAND) {
+                return;
+            }
+            machine.handleUse(event.getPlayer());
+        });
+    }
+
     private boolean canPlace(Location base) {
         if (!base.getChunk().isLoaded()) {
             base.getChunk().load();
@@ -167,6 +183,24 @@ public class SlotMachineManager implements Listener, CommandExecutor, TabComplet
         });
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void handleBlockBreak(BlockBreakEvent event) {
+        findByBlock(event.getBlock().getLocation()).ifPresent(machine -> {
+            event.setCancelled(true);
+            Player player = event.getPlayer();
+            if (!player.isSneaking()) {
+                plugin.sendMessage(player, Component.text("Sneak while breaking your Slot Machine to collect it.", NamedTextColor.YELLOW));
+                return;
+            }
+            if (!machine.getOwner().equals(player.getUniqueId())) {
+                plugin.sendMessage(player, Component.text("Only the owner can break this Slot Machine.", NamedTextColor.RED));
+                return;
+            }
+            removeMachine(machine, true);
+            plugin.sendMessage(player, Component.text("Slot Machine returned to your inventory.", NamedTextColor.GREEN));
+        });
+    }
+
     public void startSpin(SlotMachineInstance machine, Player player) {
         if (machine.isSpinning()) {
             plugin.sendMessage(player, Component.text("The reels are already spinning!", NamedTextColor.YELLOW));
@@ -174,6 +208,10 @@ public class SlotMachineManager implements Listener, CommandExecutor, TabComplet
         }
 
         TokenManager tokenManager = plugin.getTokenManager();
+        long converted = plugin.depositTokenItems(player);
+        if (converted > 0) {
+            plugin.sendMessage(player, Component.text("Banked " + converted + " Egyptian Token" + (converted == 1 ? "" : "s") + " from your inventory.", NamedTextColor.GREEN));
+        }
         if (!tokenManager.withdraw(player.getUniqueId(), 1)) {
             plugin.sendMessage(player, Component.text("You do not have enough Egyptian Tokens to play.", NamedTextColor.RED));
             return;

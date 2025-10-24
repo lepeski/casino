@@ -50,6 +50,7 @@ public class EgyptianCasinoCommand implements CommandExecutor, TabCompleter {
     }
 
     private void showBalance(Player player) {
+        depositFromInventory(player);
         long balance = plugin.getTokenManager().getBalance(player.getUniqueId());
         plugin.sendMessage(player, Component.text("You currently have ").append(plugin.formatTokens(balance)).append(Component.text(".")));
     }
@@ -109,6 +110,7 @@ public class EgyptianCasinoCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
+        depositFromInventory(player);
         TokenManager tokenManager = plugin.getTokenManager();
         if (!tokenManager.withdraw(player.getUniqueId(), bet)) {
             plugin.sendMessage(player, Component.text("You do not have enough Egyptian Tokens.", NamedTextColor.RED));
@@ -153,5 +155,12 @@ public class EgyptianCasinoCommand implements CommandExecutor, TabCompleter {
                     .forEach(completions::add);
         }
         return completions;
+    }
+
+    private void depositFromInventory(Player player) {
+        long converted = plugin.depositTokenItems(player);
+        if (converted > 0) {
+            plugin.sendMessage(player, Component.text("Banked " + converted + " Egyptian Token" + (converted == 1 ? "" : "s") + " from your inventory.", NamedTextColor.GREEN));
+        }
     }
 }

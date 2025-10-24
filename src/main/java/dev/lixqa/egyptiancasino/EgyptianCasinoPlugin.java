@@ -22,6 +22,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -45,6 +47,7 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
     private NamespacedKey slotMachineItemKey;
     private NamespacedKey slotMachineEntityKey;
     private NamespacedKey slotMachineOwnerKey;
+    private NamespacedKey egyptianTokenKey;
 
     @Override
     public void onEnable() {
@@ -61,6 +64,7 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
         slotMachineItemKey = new NamespacedKey(this, "slot_machine_item");
         slotMachineEntityKey = new NamespacedKey(this, "slot_machine_id");
         slotMachineOwnerKey = new NamespacedKey(this, "slot_machine_owner");
+        egyptianTokenKey = new NamespacedKey(this, "egyptian_token");
         slotMachineManager = new SlotMachineManager(this);
 
         PluginManager pluginManager = getServer().getPluginManager();
@@ -182,6 +186,10 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
         return slotMachineOwnerKey;
     }
 
+    public NamespacedKey getEgyptianTokenKey() {
+        return egyptianTokenKey;
+    }
+
     public SlotMachineManager getSlotMachineManager() {
         return slotMachineManager;
     }
@@ -237,7 +245,43 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
         ItemMeta meta = itemStack.getItemMeta();
         meta.displayName(Component.text("Egyptian Token", NamedTextColor.GOLD));
         meta.setCustomModelData(1010);
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        container.set(getEgyptianTokenKey(), PersistentDataType.INTEGER, 1);
         itemStack.setItemMeta(meta);
         return itemStack;
+    }
+
+    public boolean isEgyptianToken(ItemStack stack) {
+        if (stack == null || stack.getType() != org.bukkit.Material.GOLD_NUGGET) {
+            return false;
+        }
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null || meta.getCustomModelData() == null || meta.getCustomModelData() != 1010) {
+            return false;
+        }
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        Integer marker = container.get(getEgyptianTokenKey(), PersistentDataType.INTEGER);
+        return marker != null && marker == 1;
+    }
+
+    public long depositTokenItems(Player player) {
+        Inventory inventory = player.getInventory();
+        long collected = 0;
+
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (!isEgyptianToken(stack)) {
+                continue;
+            }
+
+            collected += stack.getAmount();
+            inventory.clear(slot);
+        }
+
+        if (collected > 0) {
+            tokenManager.deposit(player.getUniqueId(), collected);
+        }
+
+        return collected;
     }
 }
