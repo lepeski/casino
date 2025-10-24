@@ -48,11 +48,7 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        if (!ensureAmethystControl()) {
-            getLogger().severe("AmethystControl must be installed and enabled. EgyptianCasino will be disabled.");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
+        ensureAmethystControl();
 
         saveDefaultConfig();
         loadConfiguration();
@@ -93,18 +89,30 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
         }
     }
 
-    private boolean ensureAmethystControl() {
+    private void ensureAmethystControl() {
+        amethystHook = null;
+        mintedCrystalKey = null;
+
         if (!Bukkit.getPluginManager().isPluginEnabled("AmethystControl")) {
-            return false;
+            getLogger().warning("AmethystControl was not found. Minted crystal conversion is disabled.");
+            return;
         }
 
-        amethystHook = new AmethystControlHook(getLogger());
-        if (!amethystHook.initialize()) {
-            return false;
+        AmethystControlHook hook = new AmethystControlHook(getLogger());
+        if (!hook.initialize()) {
+            getLogger().warning("Failed to initialize the AmethystControl integration. Minted crystal conversion is disabled.");
+            return;
         }
 
-        mintedCrystalKey = amethystHook.getMintedCrystalKey();
-        return mintedCrystalKey != null;
+        NamespacedKey crystalKey = hook.getMintedCrystalKey();
+        if (crystalKey == null) {
+            getLogger().warning("AmethystControl did not provide a minted crystal key. Minted crystal conversion is disabled.");
+            return;
+        }
+
+        amethystHook = hook;
+        mintedCrystalKey = crystalKey;
+        getLogger().info("AmethystControl integration enabled. Minted crystals can now be converted.");
     }
 
     private boolean setupTokenManager() {
@@ -158,6 +166,10 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
         return mintedCrystalKey;
     }
 
+    public boolean isAmethystControlReady() {
+        return amethystHook != null && mintedCrystalKey != null;
+    }
+
     public NamespacedKey getSlotMachineItemKey() {
         return slotMachineItemKey;
     }
@@ -179,6 +191,10 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
     }
 
     public long convertCrystals(Player player) {
+        if (!isAmethystControlReady()) {
+            return -1;
+        }
+
         Inventory inventory = player.getInventory();
         long totalCrystals = 0;
 

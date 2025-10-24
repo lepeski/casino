@@ -25,6 +25,11 @@ public class CrystalExchangeListener implements Listener {
 
         event.setCancelled(true);
         long tokensAwarded = plugin.convertCrystals(event.getPlayer());
+        if (tokensAwarded == -1) {
+            plugin.sendMessage(event.getPlayer(), Component.text("The Priest of Ra cannot convert crystals right now. Install and enable AmethystControl to redeem them.", NamedTextColor.RED));
+            return;
+        }
+
         if (tokensAwarded > 0) {
             plugin.sendMessage(event.getPlayer(), Component.text("Converted your minted crystals into ")
                     .append(plugin.formatTokens(tokensAwarded))
