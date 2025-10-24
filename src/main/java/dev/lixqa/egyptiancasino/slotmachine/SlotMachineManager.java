@@ -199,7 +199,7 @@ public class SlotMachineManager implements Listener, CommandExecutor, TabComplet
             plugin.sendMessage(player, Component.text("You won " + reward + " Egyptian Token" + (reward == 1 ? "" : "s") + "!", NamedTextColor.GOLD));
         } else {
             world.playSound(displayLocation, Sound.BLOCK_SAND_FALL, SoundCategory.BLOCKS, 0.7f, 0.8f);
-            world.spawnParticle(Particle.BLOCK, displayLocation, 25, 0.35, 0.4, 0.35, 0.02, Material.SAND.createBlockData());
+            world.spawnParticle(Particle.FALLING_DUST, displayLocation, 25, 0.35, 0.4, 0.35, 0.02, Material.SAND.createBlockData());
             plugin.sendMessage(player, Component.text("No matching symbols this time.", NamedTextColor.RED));
         }
     }
