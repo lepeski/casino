@@ -256,7 +256,7 @@ public final class EgyptianCasinoPlugin extends JavaPlugin {
             return false;
         }
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null || meta.getCustomModelData() == null || meta.getCustomModelData() != 1010) {
+        if (meta == null || !meta.hasCustomModelData() || meta.getCustomModelData() != 1010) {
             return false;
         }
         PersistentDataContainer container = meta.getPersistentDataContainer();
