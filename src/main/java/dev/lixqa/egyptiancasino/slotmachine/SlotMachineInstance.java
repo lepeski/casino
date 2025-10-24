@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 public class SlotMachineInstance {
@@ -131,7 +132,7 @@ public class SlotMachineInstance {
 
         List<Integer> symbols = manager.getReelSymbolModels();
         int[] indices = new int[reelDisplays.length];
-        Arrays.setAll(indices, i -> world.getRandom().nextInt(symbols.size()));
+        Arrays.setAll(indices, i -> ThreadLocalRandom.current().nextInt(symbols.size()));
         int[] finalModels = new int[reelDisplays.length];
 
         spinTask = new BukkitRunnable() {
