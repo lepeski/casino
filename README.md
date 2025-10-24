@@ -98,39 +98,67 @@ The `resource-pack/` directory contains JSON stubs for the Pharaoh Slots assets.
 
 ### 1. Custom Items
 
-- `assets/minecraft/models/item/gold_nugget.json` – Adds an override for `CustomModelData:1010` → `item/egypt_token`. Supply `textures/item/egypt_token.png` (recommended 32×32 or 64×64) for the minted token artwork.
-- `Slot Machine` placement item uses Blaze Rod with `CustomModelData:2100`. Create a matching model (for example `item/slot_machine.json`) that references your Blockbench export if you want a custom inventory icon.
+- `assets/minecraft/models/item/gold_nugget.json` – Adds an override for `CustomModelData:1010` → `item/egypt_token`. Supply **`textures/item/egypt_token.png`** as a PNG file (32×32 minimum, 64×64 or 128×128 recommended for crisp gold filigree details).
+- `Slot Machine` placement item uses Blaze Rod with `CustomModelData:2100`. Provide an inventory icon model (for example `assets/minecraft/models/item/slot_machine.json`) that references a **PNG texture** such as `textures/item/slot_machine.png` (64×64 or 128×128 recommended).
 
 ### 2. Block Models & Animations
 
-Export your Blockbench models as `.json` and drop them into:
+Export your Blockbench models as `.json` and drop them into the paths below. Each model should reference **PNG block textures** (at least 64×64, 128×128 recommended for close-up clarity):
 
 ```
 resource-pack/
 └── assets/minecraft/
+    ├── blockstates/
+    │   └── smooth_sandstone.json
     ├── models/
     │   ├── block/egyptslot_machine.json
     │   ├── block/slot_reel_1.json
     │   ├── block/slot_reel_2.json
     │   ├── block/slot_reel_3.json
     │   └── block/slot_lever.json
+    ├── animation_controllers/
+    │   ├── slot_lever.controller.json
+    │   └── slot_reel.controller.json
     └── animations/
         ├── slot_lever.animation.json
         └── slot_reel_spin.animation.json
 ```
 
-The provided stubs include `_comment` fields marking where to hook up your final texture names (for example `block/egyptslot_machine.png`, `block/slot_lever.png`, and a glow layer). Recommended texture resolution is 64×64 or higher for crisp cabinet details.
+The provided stubs include `_comment` fields marking where to hook up your final texture names (for example `block/egyptslot_machine.png`, `block/slot_lever.png`, a turquoise inlay map, and an emissive glow layer). Keep each PNG texture square (64×64 minimum, 128×128 preferred) so UVs remain sharp on the display entities. Because the BlockDisplay renders `Material.SMOOTH_SANDSTONE`, the `blockstates/smooth_sandstone.json` override replaces the vanilla model with your slot machine cabinet — avoid decorating with real Smooth Sandstone unless you want those blocks to appear as machines too.
 
-### 3. Hooking Up Animations
+### 3. Animation Controllers
 
-- `animations/slot_lever.animation.json` – Contains forward/back keyframes for a 0.6 second lever pull (32° swing). Rename the `lever` bone and adjust keyframes to match your Blockbench rig.
-- `animations/slot_reel_spin.animation.json` – Spins a reel bone twice over three seconds. Tie this to your reel bone or use texture cycling if you prefer frame-based symbols.
+- `animation_controllers/slot_lever.controller.json` – Watches the `variable.slot_machine_lever_pull` Molang value. When the value rises above `0.5`, the controller plays `animation.slot_lever.pull` once and returns to idle as soon as `query.all_animations_finished` reports `true`.
+- `animation_controllers/slot_reel.controller.json` – Listens for `variable.slot_machine_reel_spin > 0.5` to fire up `animation.slot_reel.spin`, then falls back to `idle` when the animation completes.
 
-### 4. Registering CustomModelData
+Attach the controllers to your display entities (or whichever animation system you use) and toggle the referenced variables via commands or datapacks when the plugin announces lever pulls or reel spins. Resetting the values to `0` arms the controllers for the next cycle.
 
-Ensure your item overrides point to the models above. The gold nugget override is preconfigured for the Egyptian Token. Update `resource-pack/assets/minecraft/models/item/gold_nugget.json` if you change model names or add additional predicates.
+### 4. Hooking Up Animations
 
-### 5. Testing In-Game
+- `animations/slot_lever.animation.json` – Contains forward/back keyframes for a 0.6 second lever pull (32° swing). Rename the `lever` bone and adjust keyframes to match your Blockbench rig. Save as a Blockbench/Bedrock **animation JSON** file targeting the lever bone hierarchy.
+- `animations/slot_reel_spin.animation.json` – Spins a reel bone twice over three seconds. Tie this to your reel bone or use texture cycling if you prefer frame-based symbols. This JSON expects a Blockbench animation file that rotates a bone named `reel`. Duplicate and rename per reel if you separate symbols, and point any additional animation controllers at the new names.
+
+### 5. Asset Requirements Checklist
+
+| Asset | File type | Recommended resolution / format | Purpose |
+| --- | --- | --- | --- |
+| `textures/item/egypt_token.png` | PNG (32×32 minimum, 64×64+ recommended) | Square texture with alpha, metallic gold + turquoise inlay | Inventory icon for Egyptian Tokens |
+| `textures/item/slot_machine.png` | PNG (64×64 or 128×128) | Square texture with alpha | Optional inventory icon for Slot Machine item |
+| `textures/block/egyptslot_machine.png` | PNG (64×64 minimum, 128×128 preferred) | Square texture; can include emissive companion maps if your pack supports them | Main cabinet body |
+| `textures/block/slot_reel_1.png`, `_2.png`, `_3.png` | PNG (64×64 minimum) | Individual reel symbol strips or baked textures | Reel surfaces |
+| `textures/block/slot_lever.png` | PNG (64×64 minimum) | Lever arm texture | Lever component |
+| Optional emissive/glow textures | PNG (match base texture resolution) | Use `_e` suffix if your pack uses OptiFine/CustomModelData emissives | Crystal glow accents |
+| `animations/slot_lever.animation.json` | Blockbench animation JSON | Uses `animation_length: 0.6`, lever bone rotation keys | Lever pull animation |
+| `animations/slot_reel_spin.animation.json` | Blockbench animation JSON | Uses 3s rotation timeline, applies to `reel` bone | Reel spinning animation |
+| Block models listed above | Blockbench model JSON | Ensure pivot points align with plugin positions; origin at 0,0,0 | Slot machine structure |
+
+All textures should be **PNG files with transparency** where appropriate. If you plan to supply normal or specular maps, follow your pack's pipeline (e.g., `*_n.png` / `*_s.png`). Place audio cues (lever pull, win/loss sounds) as `.ogg` files under `assets/minecraft/sounds/` and update `sounds.json` if you wish to customize the default Minecraft sounds triggered in `EgyptSlots`.
+
+### 6. Registering CustomModelData
+
+Ensure your item overrides point to the models above. The gold nugget override is preconfigured for the Egyptian Token. Update `resource-pack/assets/minecraft/models/item/gold_nugget.json` if you change model names or add additional predicates, and double-check that each referenced texture path exists in `textures/` with the file names listed in the checklist.
+
+### 7. Testing In-Game
 
 1. Load the resource pack on your test client or server.
 2. Run `/egyptiancasino givetokens 16` to preview the Egyptian Token item.

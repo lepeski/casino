@@ -9,7 +9,7 @@ import java.util.List;
  */
 public final class EgyptSlots {
 
-    private static final List<Integer> DEFAULT_SYMBOL_MODELS = Arrays.asList(3001, 3002, 3003, 3004, 3005, 3006);
+    private static final List<Integer> DEFAULT_SYMBOL_MODELS = Arrays.asList(3001, 3002, 3003);
 
     private EgyptSlots() {
     }
